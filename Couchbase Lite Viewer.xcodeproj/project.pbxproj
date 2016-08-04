@@ -7,10 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0826A6001D538A6E00E120EF /* CouchbaseLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0826A5FF1D538A6E00E120EF /* CouchbaseLite.framework */; };
 		2733A75D1BD70E5600F0FF07 /* JSONItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 2733A75C1BD70E5600F0FF07 /* JSONItem.m */; };
 		274789FF15F97520006E842D /* URLFormatter.m in Sources */ = {isa = PBXBuildFile; fileRef = 274789FE15F97520006E842D /* URLFormatter.m */; };
-		27538FA517F28B31004C3BFD /* CouchbaseLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27538FA417F28B31004C3BFD /* CouchbaseLite.framework */; };
-		27538FA617F29303004C3BFD /* CouchbaseLite.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 27538FA417F28B31004C3BFD /* CouchbaseLite.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		27538FA917F34C09004C3BFD /* AppList.m in Sources */ = {isa = PBXBuildFile; fileRef = 27538FA817F34C09004C3BFD /* AppList.m */; };
 		27538FAF17F3607C004C3BFD /* AppListController.m in Sources */ = {isa = PBXBuildFile; fileRef = 27538FAD17F3607C004C3BFD /* AppListController.m */; };
 		27538FB017F3607C004C3BFD /* AppListController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 27538FAE17F3607C004C3BFD /* AppListController.xib */; };
@@ -40,7 +39,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				27538FA617F29303004C3BFD /* CouchbaseLite.framework in Copy Frameworks */,
 			);
 			name = "Copy Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -48,12 +46,12 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0826A5FF1D538A6E00E120EF /* CouchbaseLite.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CouchbaseLite.framework; path = Carthage/Build/Mac/CouchbaseLite.framework; sourceTree = "<group>"; };
 		1E1B56D41C7396690096DF2B /* CBLRegisterJSViewCompiler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLRegisterJSViewCompiler.h; sourceTree = "<group>"; };
 		2733A75B1BD70E5600F0FF07 /* JSONItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSONItem.h; sourceTree = "<group>"; };
 		2733A75C1BD70E5600F0FF07 /* JSONItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JSONItem.m; sourceTree = "<group>"; };
 		274789FD15F97520006E842D /* URLFormatter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = URLFormatter.h; sourceTree = "<group>"; };
 		274789FE15F97520006E842D /* URLFormatter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = URLFormatter.m; sourceTree = "<group>"; };
-		27538FA417F28B31004C3BFD /* CouchbaseLite.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CouchbaseLite.framework; path = Frameworks/CouchbaseLite.framework; sourceTree = "<group>"; };
 		27538FA717F34C09004C3BFD /* AppList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppList.h; sourceTree = "<group>"; };
 		27538FA817F34C09004C3BFD /* AppList.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppList.m; sourceTree = "<group>"; };
 		27538FAC17F3607C004C3BFD /* AppListController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppListController.h; sourceTree = "<group>"; };
@@ -99,8 +97,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				27538FA517F28B31004C3BFD /* CouchbaseLite.framework in Frameworks */,
 				27A8A777152A008200363704 /* Cocoa.framework in Frameworks */,
+				0826A6001D538A6E00E120EF /* CouchbaseLite.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -128,7 +126,7 @@
 		27A8A775152A008200363704 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				27538FA417F28B31004C3BFD /* CouchbaseLite.framework */,
+				0826A5FF1D538A6E00E120EF /* CouchbaseLite.framework */,
 				27A8A776152A008200363704 /* Cocoa.framework */,
 				27A8A778152A008200363704 /* Other Frameworks */,
 			);
@@ -233,6 +231,7 @@
 				27A8A76F152A008200363704 /* Frameworks */,
 				27A8A770152A008200363704 /* Resources */,
 				273A438E153C935F00AEC9D7 /* Copy Frameworks */,
+				0826A5FE1D5388D800E120EF /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -290,6 +289,23 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		0826A5FE1D5388D800E120EF /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Carthage/Build/Mac/CouchbaseLite.framework",
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/usr/local/bin/carthage copy-frameworks";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		27A8A76E152A008200363704 /* Sources */ = {
@@ -456,6 +472,7 @@
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)/Frameworks",
+					"$(PROJECT_DIR)/Carthage/Build/Mac",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Source/Couchbase Lite Viewer-Prefix.pch";
@@ -485,6 +502,7 @@
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)/Frameworks",
+					"$(PROJECT_DIR)/Carthage/Build/Mac",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Source/Couchbase Lite Viewer-Prefix.pch";

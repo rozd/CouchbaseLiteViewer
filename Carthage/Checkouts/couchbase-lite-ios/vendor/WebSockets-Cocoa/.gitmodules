@@ -1,0 +1,6 @@
+[submodule "vendor/MYUtilities"]
+	path = vendor/MYUtilities
+	url = https://github.com/snej/MYUtilities.git
+[submodule "vendor/CocoaAsyncSocket"]
+	path = vendor/CocoaAsyncSocket
+	url = https://github.com/robbiehanson/CocoaAsyncSocket.git

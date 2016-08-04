@@ -1,0 +1,14 @@
+.DS_Store
+*.pbxuser
+*.perspectivev3
+*.mode1v3
+*.xcscmblueprint
+*.xccheckout
+*.framework
+*.a
+*~
+xcuserdata/
+/build/
+DerivedData/
+obj/
+derived_src/

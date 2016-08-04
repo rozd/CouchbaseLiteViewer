@@ -1,0 +1,9 @@
+[submodule "vendor/forestdb"]
+	path = vendor/forestdb
+	url = https://github.com/couchbaselabs/forestdb.git
+[submodule "vendor/sqlite3-unicodesn"]
+	path = vendor/sqlite3-unicodesn
+	url = https://github.com/snej/sqlite3-unicodesn.git
+[submodule "vendor/openssl"]
+	path = vendor/openssl
+	url = https://github.com/couchbaselabs/couchbase-lite-libcrypto

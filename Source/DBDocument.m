@@ -51,8 +51,8 @@ static BOOL returnErrorWithMessage(NSString* message, NSError **outError) {
     if (![absoluteURL isFileURL] || ![@[@"cblite", @"cblite2"] containsObject: extension]) {
         return returnErrorWithMessage(@"This file format is not supported.", outError);
     }
-    BOOL isNewFormat = [extension isEqualToString: @"cblite2"];
-
+//    BOOL isNewFormat = [extension isEqualToString: @"cblite2"];
+/*
     if (CBLVersion().doubleValue >= 1.2) {
         // If we have Couchbase Lite 1.2 we shouldn't open an old-format database because it'll be
         // upgraded to the new format, and that might make it unreadable in its host app:
@@ -64,7 +64,7 @@ static BOOL returnErrorWithMessage(NSString* message, NSError **outError) {
             return returnErrorWithMessage(@"This database is too new to be opened by this app. Use a Viewer that supports Couchbase Lite 1.2.", outError);
         }
     }
-
+*/
     CBLManagerOptions options = {.readOnly = false};
     NSString* managerPath = _path.stringByDeletingLastPathComponent;
     NSError* error;

@@ -1,0 +1,27 @@
+//
+//  Prefix header
+//
+//  The contents of this file are implicitly included at the beginning of every source file.
+//
+
+#include <stddef.h>
+#include <stdint.h>
+#include <stdlib.h>
+
+#ifdef __cplusplus
+    #include <algorithm>
+    #include <string>
+    #include <vector>
+#endif
+
+#ifdef __OBJC__
+    #import <Foundation/Foundation.h>
+#endif
+
+// Enable encryption support
+#define CBFOREST_ENCRYPTION
+
+// Enable thread safety of C API:
+#ifndef C4DB_THREADSAFE
+#define C4DB_THREADSAFE 0
+#endif
