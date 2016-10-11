@@ -10,6 +10,11 @@
 #import "Test.h"
 
 
+#if !__has_feature(objc_arc)
+#error This source file must be compiled with ARC
+#endif
+
+
 NSDictionary* _dictof(const _dictpair pairs[], size_t count)
 {
     CAssert(count<10000);
@@ -313,18 +318,18 @@ void cfSetObj(void *var, CFTypeRef value) {
 @end
 
 
-#if NS_BLOCKS_AVAILABLE && MY_ENABLE_ENUMERATOR_MAP
+#if MY_ENABLE_ENUMERATOR_MAP
 @interface MYMappedEnumerator : NSEnumerator
 {
     NSEnumerator* _source;
     id (^_filter)(id obj) ;
 }
-- (id) initWithEnumerator: (NSEnumerator*)enumerator filter: (id (^)(id obj))filter;
+- (instancetype) initWithEnumerator: (NSEnumerator*)enumerator filter: (id (^)(id obj))filter;
 @end
 
 @implementation MYMappedEnumerator
 
-- (id) initWithEnumerator: (NSEnumerator*)enumerator filter: (id (^)(id obj))filter {
+- (instancetype) initWithEnumerator: (NSEnumerator*)enumerator filter: (id (^)(id obj))filter {
     self = [super init];
     if (self) {
         _source = [enumerator retain];
@@ -360,7 +365,7 @@ void cfSetObj(void *var, CFTypeRef value) {
 }
 
 @end
-#endif // NS_BLOCKS_AVAILABLE && MY_ENABLE_ENUMERATOR_MAP
+#endif // MY_ENABLE_ENUMERATOR_MAP
 
 
 #if DEBUG
@@ -394,7 +399,7 @@ TestCase(CollectionUtils) {
                         nil];
     CAssertEqual(d,dd);
 
-#if NS_BLOCKS_AVAILABLE && MY_ENABLE_ENUMERATOR_MAP
+#if MY_ENABLE_ENUMERATOR_MAP
     NSEnumerator* source = [$array(@"teenage", @"mutant", @"ninja", @"turtles") objectEnumerator];
     NSEnumerator* mapped = [source my_map: ^id(NSString* str) {
         return [str hasPrefix: @"t"] ? [str uppercaseString] : nil;

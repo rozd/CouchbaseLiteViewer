@@ -14,6 +14,12 @@
 
 #include <sys/sysctl.h>
 #include <unistd.h>
+#include <pthread.h>
+
+
+#if !__has_feature(objc_arc)
+#error This source file must be compiled with ARC
+#endif
 
 
 #ifndef Warn
@@ -110,7 +116,7 @@ static void report( NSException *x ) {
     [NSApp reportException: x];
 }
 
-- (id) init
+- (instancetype) init
 {
     self = [super init];
     if (self != nil) {
@@ -130,12 +136,17 @@ static void report( NSException *x ) {
 - (void) _showExceptionAlert: (NSException*)x
 {
     NSString *stack = [x my_callStack] ?:@"";
-    NSInteger r = NSRunCriticalAlertPanel( @"Internal Error!",
-                                          @"Uncaught exception: %@\n%@\n\n%@\n\n"
-                                          "Please report this bug (you can copy & paste the text).",
-                                          @"Continue",@"Quit",nil,
-                                          [x name], [x reason], stack);
-    if( r == NSAlertAlternateReturn )
+
+    NSAlert* alert = [NSAlert new];
+    alert.alertStyle = NSCriticalAlertStyle;
+    alert.messageText =  @"Internal Error!";
+    alert.informativeText = $sprintf(@"Uncaught exception: %@\n%@\n\n%@\n\n"
+                                     "Please report this bug (you can copy & paste the text).",
+                                     [x name], [x reason], stack);
+    [alert addButtonWithTitle: @"Continue"];
+    [alert addButtonWithTitle: @"Quit"];
+
+    if( [alert runModal] == NSAlertSecondButtonReturn )
         exit(1);
     MYSetExceptionReporter(&report);
 }
@@ -168,6 +179,11 @@ BOOL IsGDBAttached( void )
     }
     return (kp.kp_proc.p_flag & P_TRACED) != 0;
 #endif
+}
+
+
+void MYBreakpoint() {
+    pthread_kill(pthread_self(), SIGINT);
 }
 
 

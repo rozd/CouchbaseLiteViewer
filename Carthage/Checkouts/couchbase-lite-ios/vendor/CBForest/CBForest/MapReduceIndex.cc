@@ -357,11 +357,15 @@ namespace cbforest {
             return false;
         }
 
-        void finish(bool success) {
-            if (success)
+        void finish(sequence finalSequence) {
+            if (finalSequence > 0) {
+                index->_lastSequenceIndexed = std::max(index->_lastSequenceIndexed,
+                                                       finalSequence);
                 index->saveState(*_transaction);
-            else
+                _transaction->commit();
+            } else {
                 _transaction->abort();
+            }
         }
 
     private:
@@ -409,9 +413,14 @@ namespace cbforest {
     }
 
 
+    void MapReduceIndexer::finished(sequence seq) {
+        for (auto writer = _writers.begin(); writer != _writers.end(); ++writer) {
+            (*writer)->finish(seq);
+        }
+    }
+
     MapReduceIndexer::~MapReduceIndexer() {
         for (auto writer = _writers.begin(); writer != _writers.end(); ++writer) {
-            (*writer)->finish(_finished);
             delete *writer;
         }
     }

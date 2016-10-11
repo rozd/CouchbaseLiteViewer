@@ -1710,6 +1710,37 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 }
 
 
+- (void) test29_OpenIDConnect_PusherBecomesIdle {
+    // https://github.com/couchbase/couchbase-lite-ios/issues/1392
+    NSURL* remoteDbURL = [self remoteNonSSLTestDBURL: @"openid_db"];
+    if (!remoteDbURL)
+        return;
+    [self eraseRemoteDB: remoteDbURL];
+
+    NSError* error;
+    Assert([CBLOpenIDConnectAuthorizer forgetIDTokensForServer: remoteDbURL error: &error]);
+
+    __block BOOL callbackInvoked = NO;
+    id<CBLAuthenticator> auth = [CBLAuthenticator OpenIDConnectAuthenticator:
+                                 ^(NSURL* login, NSURL* authBase, CBLOIDCLoginContinuation cont)
+                                 {
+                                     [self assertValidOIDCLogin: login authBase: authBase forRemoteDB: remoteDbURL];
+                                     // Fake a form submission to the OIDC test provider, to get an auth URL redirect:
+                                     NSURL* authURL = [self loginToOIDCTestProvider: remoteDbURL];
+                                     callbackInvoked = YES;
+                                     cont(authURL, nil);
+                                 }];
+
+    CBLReplication* push = [db createPushReplication: remoteDbURL];
+    push.authenticator = auth;
+    push.continuous = YES;
+    [self runReplication: push expectedChangesCount: 0];
+    
+    Assert(push.status == kCBLReplicationIdle);
+    Assert(callbackInvoked);
+}
+
+
 - (NSError*) pullWithOIDCAuth: (id<CBLAuthenticator>)auth
             expectingUsername: (NSString*)username
 {
@@ -1734,7 +1765,16 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 {
     Log(@"*** Login callback invoked with login URL: <%@>, authBase: <%@>", login, authBase);
     Assert(login);
+    
+#if TARGET_OS_SIMULATOR
     AssertEqual(login.host, remoteDbURL.host);
+#else
+    // Skip verifying login.host when testing on real devices if login.host is localhost.
+    // This allows the OIDC tests to be passed without reconfiguring SGW OIDC configuration:
+    if (!([login.host isEqualToString:@"127.0.0.1"] || [login.host isEqualToString:@"localhost"]))
+        AssertEqual(login.host, remoteDbURL.host);
+#endif
+    
     AssertEqual(login.port, remoteDbURL.port);
     AssertEqual(login.path, [remoteDbURL.path stringByAppendingPathComponent: @"_oidc_testing/authorize"]);
     Assert(authBase);
@@ -1746,7 +1786,10 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 
 - (NSURL*) loginToOIDCTestProvider: (NSURL*)remoteDbURL {
     // Fake a form submission to the OIDC test provider, to get an auth URL redirect:
-    NSURL* formURL = [NSURL URLWithString: [remoteDbURL.absoluteString stringByAppendingString: @"/_oidc_testing/authenticate?client_id=CLIENTID&redirect_uri=http%3A%2F%2F127.0.0.1%3A4984%2Fopenid_db%2F_oidc_callback&response_type=code&scope=openid+email&state="]];
+    NSString* formURLPath = @"/_oidc_testing/authenticate?client_id=CLIENTID&redirect_uri=http%3A%2F%2F"
+        "{$REMOTE_DB_HOST}%3A4984%2Fopenid_db%2F_oidc_callback&response_type=code&scope=openid+email&state=";
+    formURLPath = [formURLPath stringByReplacingOccurrencesOfString: @"{$REMOTE_DB_HOST}" withString: remoteDbURL.host];
+    NSURL* formURL = [NSURL URLWithString: [remoteDbURL.absoluteString stringByAppendingString: formURLPath]];
     NSData *formData = [@"username=pupshaw&authenticated=true" dataUsingEncoding: NSUTF8StringEncoding];
     CBLRemoteRequest* rq = [[CBLRemoteRequest alloc] initWithMethod: @"POST" URL: formURL body: formData onCompletion: nil];
     [rq dontRedirect];

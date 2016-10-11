@@ -15,6 +15,11 @@
 #include <termios.h>
 
 
+#if !__has_feature(objc_arc)
+#error This source file must be compiled with ARC
+#endif
+
+
 BOOL gMYWarnRaisesException;
 
 
@@ -50,22 +55,8 @@ static void InitLogging() {
                 MYDefault_LogDomain.level = 1;
                 NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
                 for(NSString *key in [defaults dictionaryRepresentation]) {
-                    if ([key hasPrefix: @"Log"] && key.length > 3 && [defaults boolForKey: key]) {
-                        MYLogLevel level = MYLogLevelOn;
-                        NSString* trimmedKey = [key substringFromIndex: 3]; // trim 'Log'
-                        if ([trimmedKey hasSuffix: @"Debug"]) {
-                            trimmedKey = [trimmedKey substringToIndex: trimmedKey.length - 5];
-                            level = MYLogLevelDebug;
-#if !DEBUG
-                            Warn(@"Debug-level logging has no effect in release builds");
-#endif
-                        }
-                        while ([trimmedKey hasSuffix: @"Verbose"]) {
-                            trimmedKey = [trimmedKey substringToIndex: trimmedKey.length - 7];
-                            level++;
-                        }
-                        enableLogTo(trimmedKey, level);
-                    }
+                    if ([key hasPrefix: @"Log"] && key.length > 3 && [defaults boolForKey: key])
+                        enableLogTo([key substringFromIndex: 3], MYLogLevelOn);
                 }
 
                 static const char* kModeNames[] = {"NSLog", "file", "TTY", "color TTY", "color Xcode"};
@@ -116,6 +107,22 @@ BOOL _WillLogTo(NSString *domain, MYLogLevel atLevel) {
 #endif
 
 static MYLogLevel enableLogTo(NSString *domain, MYLogLevel level) {
+    MYLogLevel domainLevel = MYLogLevelOn;
+    if ([domain hasSuffix: @"Debug"]) {
+        domain = [domain substringToIndex: domain.length - 5];
+        domainLevel = MYLogLevelDebug;
+#if !DEBUG
+        Warn(@"Debug-level logging has no effect in release builds");
+#endif
+    }
+    while ([domain hasSuffix: @"Verbose"]) {
+        domain = [domain substringToIndex: domain.length - 7];
+        domainLevel++;
+    }
+
+    if (level == MYLogLevelOn && domainLevel > level)
+        level = domainLevel;
+
     MYLogDomain* d = findDomain(domain);
     if (!d) {
         Warn(@"EnableLogTo: There is no logging domain named '%@'. Available domains are: %@",
@@ -214,13 +221,16 @@ static MYLogDomain sWarningDomain = {1, "WARNING", NULL};
 
 static void _Logv(const MYLogDomain* domain, NSString *msg, va_list args) {
     @autoreleasepool {
+        // Format the message:
+        msg = [[NSString alloc] initWithFormat: msg arguments: args];
         BOOL hasDomain = domain && strcmp(domain->name, "MYDefault") != 0;
+
         if (MYLoggingCallback) {
-            msg = [[NSString alloc] initWithFormat: msg arguments: args];
             NSString* prefix = hasDomain ? @(domain->name) : nil;
             if (!MYLoggingCallback(prefix, msg))
                 return;
         }
+
         if (loggingMode() > kLoggingToOther) {
             static NSDateFormatter *sTimestampFormat;
             if (! sTimestampFormat) {
@@ -235,7 +245,6 @@ static void _Logv(const MYLogDomain* domain, NSString *msg, va_list args) {
                 timestampTrailer = @"‖";
 
             NSString *separator = hasDomain ?@": " :@"";
-            msg = [[NSString alloc] initWithFormat: msg arguments: args];
             BOOL isWarning = (domain == &sWarningDomain);
             NSString* prefix = hasDomain ? @(domain->name) : @"";
             NSString *prefixColor = isWarning ?COLOR_WARNING :COLOR_PREFIX;
@@ -247,8 +256,9 @@ static void _Logv(const MYLogDomain* domain, NSString *msg, va_list args) {
             fputs([finalMsg UTF8String], stderr);
         } else {
             if (hasDomain)
-                msg = $sprintf(@"%s: %@", domain->name, msg);
-            NSLogv(msg,args);
+                NSLog(@"%s: %@", domain->name, msg);
+            else
+                NSLog(@"%@", msg);
         }
     }
 }

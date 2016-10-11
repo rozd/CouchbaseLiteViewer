@@ -130,24 +130,67 @@
 }
 
 
-- (NSString*) my_sanitizedString {
-    TestedBy(MYURLUtils);
-    CFRange passRange = CFURLGetByteRangeForComponent((CFURLRef)self, kCFURLComponentPassword, NULL);
-    if (Cover(passRange.length == 0))
-        return self.absoluteString;
-    NSUInteger passEnd = passRange.location + passRange.length;
+static NSString* compsToString(NSURLComponents* comps) {
+    if ([comps respondsToSelector: @selector(string)])     // iOS 8, macOS 10.10
+        return comps.string;
+    else
+        return comps.URL.absoluteString;
+}
 
-    CFIndex nBytes = CFURLGetBytes((CFURLRef)self, NULL, 0);
-    UInt8 urlBytes[nBytes];
-    CFURLGetBytes((CFURLRef)self, urlBytes, sizeof(urlBytes));
-    
-    NSString* before = [[NSString alloc] initWithBytes: urlBytes
-                                                length: passRange.location
-                                              encoding:NSUTF8StringEncoding];
-    NSString* after = [[NSString alloc] initWithBytes: &urlBytes[passEnd]
-                                               length: (nBytes - passEnd)
-                                             encoding:NSUTF8StringEncoding];
-    return [NSString stringWithFormat: @"%@*****%@", before, after];
+
+- (NSString*) my_sanitizedString {
+    if (!self.password && !self.query)
+        return self.absoluteString;
+    return compsToString(sanitize(self));
+}
+
+- (NSString*) my_sanitizedPath {
+    NSURLComponents* comp = sanitize(self);
+    if ([comp respondsToSelector: @selector(rangeOfPath)])     // iOS 9, macOS 10.11
+        return [compsToString(comp) substringFromIndex: comp.rangeOfPath.location];
+    else {
+        comp.scheme = comp.host = comp.user = comp.password = nil;
+        comp.port = nil;
+        return compsToString(comp);
+    }
+}
+
+static NSURLComponents* sanitize(NSURL* url) {
+    NSURLComponents* comp = [[NSURLComponents alloc] initWithURL: url
+                                         resolvingAgainstBaseURL: YES];
+    if (comp.password)
+        comp.password = @"*****";
+    if (comp.query) {
+        if ([comp respondsToSelector:@selector(queryItems)]) {     // iOS 8, macOS 10.10
+            comp.queryItems = [comp.queryItems my_map:^(NSURLQueryItem *item) {
+                if ([item.name rangeOfString: @"token"].length > 0
+                    || [item.name rangeOfString: @"code"].length > 0) {
+                    item = [NSURLQueryItem queryItemWithName: item.name value: @"*****"];
+                }
+                return item;
+            }];
+        } else {
+            NSMutableString* newQuery = [NSMutableString new];
+            NSString* query = comp.query;
+            for (NSString* item in [query componentsSeparatedByString: @"&"]) {
+                if (newQuery.length > 0)
+                    [newQuery appendString: @"&"];
+                NSRange e = [item rangeOfString: @"="];
+                if (e.length > 0 && NSMaxRange(e) < item.length) {
+                    NSString* key = [item substringToIndex: e.location];
+                    if ([key rangeOfString: @"token"].length > 0
+                            || [key rangeOfString: @"code"].length > 0) {
+                        [newQuery appendString: key];
+                        [newQuery appendString: @"=*****"];
+                        continue;
+                    }
+                }
+                [newQuery appendString: item];
+            }
+            comp.query = newQuery;
+        }
+    }
+    return comp;
 }
 
 
@@ -180,6 +223,9 @@ TestCase(MYURLUtils) {
     url = $url(@"https://bob:foo@example.com/path/here?query#fragment");
     CAssertEqual(url.my_URLByRemovingUser, $url(@"https://example.com/path/here?query#fragment"));
     CAssertEqual(url.my_sanitizedString, @"https://bob:*****@example.com/path/here?query#fragment");
+
+    url = $url(@"https://example.com/login/here?seekrit_token=SEEKRIT&benign=23");
+    CAssertEqual(url.my_sanitizedString, @"https://example.com/login/here?seekrit_token=*****&benign=23");
 }
 
 

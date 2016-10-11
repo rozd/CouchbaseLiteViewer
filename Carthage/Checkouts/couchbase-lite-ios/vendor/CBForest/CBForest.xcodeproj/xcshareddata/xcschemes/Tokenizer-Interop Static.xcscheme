@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "0800"
+   LastUpgradeVersion = "0730"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -14,10 +14,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "275D3A081B0273020013B9A9"
-               BuildableName = "libBLIP-iOS.a"
-               BlueprintName = "BLIP-iOS"
-               ReferencedContainer = "container:BLIP.xcodeproj">
+               BlueprintIdentifier = "72EFA6181D8A5FA000D17CFE"
+               BuildableName = "libTokenizer.a"
+               BlueprintName = "Tokenizer-Interop Static"
+               ReferencedContainer = "container:CBForest.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -28,26 +28,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "275D3A131B0273020013B9A9"
-               BuildableName = "BLIPTests-iOS.xctest"
-               BlueprintName = "BLIPTests-iOS"
-               ReferencedContainer = "container:BLIP.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
       </Testables>
-      <MacroExpansion>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "275D3A081B0273020013B9A9"
-            BuildableName = "libBLIP-iOS.a"
-            BlueprintName = "BLIP-iOS"
-            ReferencedContainer = "container:BLIP.xcodeproj">
-         </BuildableReference>
-      </MacroExpansion>
       <AdditionalOptions>
       </AdditionalOptions>
    </TestAction>
@@ -64,10 +45,10 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "275D3A081B0273020013B9A9"
-            BuildableName = "libBLIP-iOS.a"
-            BlueprintName = "BLIP-iOS"
-            ReferencedContainer = "container:BLIP.xcodeproj">
+            BlueprintIdentifier = "72EFA6181D8A5FA000D17CFE"
+            BuildableName = "libTokenizer.a"
+            BlueprintName = "Tokenizer-Interop Static"
+            ReferencedContainer = "container:CBForest.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <AdditionalOptions>
@@ -82,10 +63,10 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "275D3A081B0273020013B9A9"
-            BuildableName = "libBLIP-iOS.a"
-            BlueprintName = "BLIP-iOS"
-            ReferencedContainer = "container:BLIP.xcodeproj">
+            BlueprintIdentifier = "72EFA6181D8A5FA000D17CFE"
+            BuildableName = "libTokenizer.a"
+            BlueprintName = "Tokenizer-Interop Static"
+            ReferencedContainer = "container:CBForest.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </ProfileAction>

@@ -18,10 +18,13 @@
 // This is obviously for development use only!
 #define EXPLAIN_EVERYTHING 0
 
+// If nonzero, the readLock methods allow reads concurrently with a single writer.
+// This is legal if the database is in WAL mode.
+#define CONCURRENT_READS 1
+
+// Set this to 1 to log messages about locks, for debugging.
 #define LOG_LOCKS 0
 
-// Number of _microseconds_ to wait between attempts to retry a query when the db is busy/locked.
-#define RETRY_DELAY_MICROSEC 20000
 
 + (id)databaseWithPath:(NSString*)aPath {
     return [[[self alloc] initWithPath:aPath] autorelease];
@@ -54,6 +57,7 @@
     [openResultSets release];
     [cachedStatements release];
     [databasePath release];
+    [databaseLock release];
     
     [super dealloc];
 }
@@ -123,6 +127,8 @@
     if (!db) {
         return YES;
     }
+
+    [self beginUse];
     
     int  rc;
     BOOL retry;
@@ -149,6 +155,7 @@
     while (retry);
     
     db = NULL;
+    [self endUse];
     return YES;
 }
 
@@ -211,6 +218,7 @@
 
 - (void) acquireReadLock {
     if (readLevel++ == 0) {
+#if !CONCURRENT_READS
 #if LOG_LOCKS
         if (databaseLock && ![databaseLock tryLock]) {
             NSLog(@"SQLITE: %p Waiting to read %@ ...", self, databaseLock.name);
@@ -224,16 +232,19 @@
 #else
         [databaseLock lock];
 #endif
+#endif
     }
 }
 
 - (void) releaseReadLock {
     NSAssert(readLevel > 0, @"Too many calls to releaseReadLock");
     if (--readLevel == 0) {
+#if !CONCURRENT_READS
 #if LOG_LOCKS
         NSLog(@"SQLITE: %p releasing read lock of %@", self, databaseLock.name);
 #endif
         [databaseLock unlock];
+#endif
     }
 }
 
@@ -317,14 +328,16 @@ static int busyCallback(void* context, int numberOfTries) {
     if (!key) {
         return NO;
     }
-    
+    [self beginUse];
+
     int rc = sqlite3_rekey(db, [key UTF8String], (int)strlen([key UTF8String]));
-    
+
     if (rc != SQLITE_OK) {
         NSLog(@"error on rekey: %d", rc);
         NSLog(@"%@", [self lastErrorMessage]);
     }
-    
+
+    [self endUse];
     return (rc == SQLITE_OK);
 }
 
@@ -332,9 +345,11 @@ static int busyCallback(void* context, int numberOfTries) {
     if (!key) {
         return NO;
     }
-    
+    [self beginUse];
+
     int rc = sqlite3_key(db, [key UTF8String], (int)strlen([key UTF8String]));
-    
+
+    [self endUse];
     return (rc == SQLITE_OK);
 }
 #endif // SQLITE_HAS_CODEC
@@ -357,18 +372,8 @@ static int busyCallback(void* context, int numberOfTries) {
 }
 #endif
 
-- (void)warnInUse {
-    NSLog(@"The FMDatabase %@ is currently in use.", self);
-    
-#ifndef NS_BLOCK_ASSERTIONS
-    if (crashOnErrors) {
-        NSAssert1(false, @"The FMDatabase %@ is currently in use.", self);
-    }
-#endif
-}
-
 - (BOOL)databaseExists {
-    
+
     if (!db) {
             
         NSLog(@"The FMDatabase %@ is not open.", self);
@@ -400,23 +405,20 @@ static int busyCallback(void* context, int numberOfTries) {
 }
 
 - (sqlite_int64)lastInsertRowId {
-    if (![self beginUse])
-        return 0;
-    
+    [self beginUse];
+
     sqlite_int64 ret = sqlite3_last_insert_rowid(db);
     
-    [self setInUse:NO];
-    
+    [self endUse];
     return ret;
 }
 
 - (int)changes {
-    if (![self beginUse])
-        return 0;
+    [self beginUse];
 
     int ret = sqlite3_changes(db);
-    [self setInUse:NO];
-    
+
+    [self endUse];
     return ret;
 }
 
@@ -605,8 +607,7 @@ static int bindNSString(sqlite3_stmt *pStmt, int idx, NSString *str) {
         return 0x00;
     }
     
-    if (![self beginUse])
-        return nil;
+    [self beginUse];
 
     CBL_FMResultSet *rs = nil;
     
@@ -644,7 +645,7 @@ static int bindNSString(sqlite3_stmt *pStmt, int idx, NSString *str) {
             
             sqlite3_finalize(pStmt);
             
-            [self setInUse:NO];
+            [self endUse];
             return nil;
         }
 
@@ -682,7 +683,7 @@ static int bindNSString(sqlite3_stmt *pStmt, int idx, NSString *str) {
     if (idx != queryCount) {
         NSLog(@"Error: the bind count is not correct for the # of variables (executeQuery)");
         sqlite3_finalize(pStmt);
-        [self setInUse:NO];
+        [self endUse];
         return nil;
     }
 
@@ -713,7 +714,7 @@ static int bindNSString(sqlite3_stmt *pStmt, int idx, NSString *str) {
 
     [statement release];    
     
-    [self setInUse:NO];
+    [self endUse];
     
     return rs;
 }
@@ -753,8 +754,7 @@ static int bindNSString(sqlite3_stmt *pStmt, int idx, NSString *str) {
         return NO;
     }
     
-    if (![self beginUse])
-        return NO;
+    [self beginUse];
 
     int rc                   = 0x00;
     sqlite3_stmt *pStmt      = 0x00;
@@ -784,7 +784,7 @@ static int bindNSString(sqlite3_stmt *pStmt, int idx, NSString *str) {
             }
             
             sqlite3_finalize(pStmt);
-            [self setInUse:NO];
+            [self endUse];
             
             if (outErr) {
                 *outErr = [NSError errorWithDomain:[NSString stringWithUTF8String:sqlite3_errmsg(db)] code:rc userInfo:nil];
@@ -829,7 +829,7 @@ static int bindNSString(sqlite3_stmt *pStmt, int idx, NSString *str) {
     if (idx != queryCount) {
         NSLog(@"Error: the bind count is not correct for the # of variables (%@) (executeUpdate)", sql);
         sqlite3_finalize(pStmt);
-        [self setInUse:NO];
+        [self endUse];
         return NO;
     }
 
@@ -899,7 +899,7 @@ static int bindNSString(sqlite3_stmt *pStmt, int idx, NSString *str) {
         rc = rcCleanup;
 
     [self releaseWriteLock];
-    [self setInUse:NO];
+    [self endUse];
     
     return (rc == SQLITE_OK);
 }
@@ -939,14 +939,10 @@ static int bindNSString(sqlite3_stmt *pStmt, int idx, NSString *str) {
 
 
 - (BOOL)inUse {
-    return inUse || inTransaction;
+    return atomic_load(&inUse._Value) || inTransaction;
 }
 
-- (void)setInUse:(BOOL)b {
-    inUse = b;
-}
-
-- (BOOL) beginUse {
+- (void) beginUse {
     BOOL ok;
     if (dispatchQueue) {
 #if 1
@@ -975,12 +971,20 @@ static int bindNSString(sqlite3_stmt *pStmt, int idx, NSString *str) {
               " created on! Please see the concurrency guidelines in the Couchbase Lite "
               "documentation. *****"];
     }
-    if (inUse) {
-        [self warnInUse];
-        return NO;
+
+    if (atomic_flag_test_and_set(&inUse) == true) {
+        [[NSAssertionHandler currentHandler] handleFailureInMethod:_cmd
+                                                            object:self
+                                                              file:@(__FILE__)
+                                                        lineNumber:__LINE__
+                                                       description:
+         @"***** THREAD-SAFETY VIOLATION: This database is being used from multiple threads at once! "
+         " Please see the concurrency guidelines in the Couchbase Lite documentation. *****"];
     }
-    inUse = YES;
-    return YES;
+}
+
+- (void)endUse {
+    atomic_flag_clear(&inUse);
 }
 
 

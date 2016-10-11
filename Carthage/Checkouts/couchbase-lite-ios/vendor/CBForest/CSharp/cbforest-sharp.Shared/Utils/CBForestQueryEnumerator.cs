@@ -39,6 +39,10 @@ namespace CBForest
         private string _geoJSON;
         private C4FullTextTerm *_fullTextTerms;
 
+        public readonly uint FullTextID;
+
+        public readonly uint FullTextTermCount;
+
         /// <summary>
         /// The key of this entry
         /// </summary>
@@ -48,7 +52,10 @@ namespace CBForest
         /// The value of this entry
         /// </summary>
         public readonly C4Slice Value;
-        
+
+        /// <summary>
+        /// Gets the geoquery JSON information as it exists in the store
+        /// </summary>
         public readonly C4Slice GeoJSONRaw;
 
         /// <summary>
@@ -106,7 +113,10 @@ namespace CBForest
                 return _valueJSON;
             }
         }
-        
+
+        /// <summary>
+        /// Gets the geoquery information in JSON format
+        /// </summary>
         public string GeoJSON
         {
             get { 
@@ -117,9 +127,11 @@ namespace CBForest
                 return _geoJSON;
             }
         }
-        
-        public uint FullTextTermCount { get; private set; }
-        
+
+        /// <summary>
+        /// Gets the bounding box for the geoquery of this query, if applicable
+        /// </summary>
+        /// <value>The bounding box.</value>
         public C4GeoArea BoundingBox { get; private set; }
 
         #endregion
@@ -134,6 +146,7 @@ namespace CBForest
             _docIDSlice = e->docID;
             _fullTextTerms = e->fullTextTerms;
             FullTextTermCount = e->fullTextTermCount;
+            FullTextID = e->fullTextID;
             BoundingBox = e->geoBBox;
             GeoJSONRaw = e->geoJSON;
         }
@@ -141,7 +154,12 @@ namespace CBForest
         #endregion
         
         #region Public Methods
-        
+
+        /// <summary>
+        /// Gets the full text term at the specified index
+        /// </summary>
+        /// <returns>The full text term at the specified index.</returns>
+        /// <param name="index">The index to check.</param>
         public C4FullTextTerm GetFullTextTerm(int index)
         {
             return _fullTextTerms[index]; 
@@ -174,6 +192,9 @@ namespace CBForest
             _e = e;
         }
 
+        /// <summary>
+        /// Finalizer
+        /// </summary>
         ~CBForestQueryEnumerator()
         {
             Dispose(true);

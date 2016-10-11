@@ -24,8 +24,9 @@
         parentDB = aDB;
 
         // Perform the initial sqlite3_step call now, so that we can detect an error and fail
-        // gracefully:
-        int rc = [self step];
+        // gracefully. Call _step (not step) to avoid a call to -beginUse, which would bomb
+        // because -beginUse has already been invoked by my caller.
+        int rc = [self _step];
         if (rc != SQLITE_ROW && rc != SQLITE_DONE) {
             [self release];
             return nil;
@@ -130,6 +131,13 @@
 #endif
 
 - (int)step {
+    [parentDB beginUse];
+    int result = [self _step];
+    [parentDB endUse];
+    return result;
+}
+
+- (int)_step {
     int rc = sqlite3_step(statement.statement);
     
     if (SQLITE_BUSY == rc || SQLITE_LOCKED == rc) {

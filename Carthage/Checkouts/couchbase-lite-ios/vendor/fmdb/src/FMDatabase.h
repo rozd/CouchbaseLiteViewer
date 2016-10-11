@@ -1,5 +1,6 @@
 #import <Foundation/Foundation.h>
 #import <sqlite3.h>
+#import <stdatomic.h>
 #import "FMResultSet.h"
 @class MYReadWriteLock;
 
@@ -9,7 +10,7 @@
 	NSString*   databasePath;
     BOOL        logsErrors;
     BOOL        crashOnErrors;
-    BOOL        inUse;
+    atomic_flag inUse;
     BOOL        inTransaction;
     BOOL        traceExecution;
     BOOL        checkedOut;
@@ -102,7 +103,8 @@
 #endif
 
 - (BOOL)inUse;
-- (void)setInUse:(BOOL)value;
+- (void)beginUse;
+- (void)endUse;
 
 
 - (BOOL)shouldCacheStatements;

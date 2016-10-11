@@ -6,7 +6,7 @@
 
 Get more info and downloads of Couchbase Lite (for iOS and Android) via [the Couchbase mobile portal](http://mobile.couchbase.com)
 
-[Click here for **official documentation for Couchbase Lite iOS**](http://developer.couchbase.com/documentation/mobile/current/develop/training/build-first-ios-app/index.html)
+[Click here for **official documentation for Couchbase Lite iOS**](http://developer.couchbase.com/documentation/mobile/current/training/index.html)
 
 Latency matters a lot to users, so a local database takes frustration out of the equation. It’s got JSON documents, and the same map/reduce as Couchbase Server, in a pint-sized edition.
 
@@ -96,10 +96,10 @@ Can be included in any iOS project via [Carthage](https://github.com/carthage/ca
 Add the following line to your Cartfile:
    
 ```
-github "couchbase/couchbase-lite-ios" "release/1.2.0"
+github "couchbase/couchbase-lite-ios" "release/1.3.0"
 ```
 
-Run `carthage update --platform ios`, and you should now have the latest version of Couchbase Lite iOS in your Carthage folder.
+(or substitute the branch name corresponding to the specific release you want.) Run `carthage update --platform ios`, and you should now have the latest version of Couchbase Lite iOS in your Carthage folder.
 
 
 [1]: http://couchdb.apache.org
